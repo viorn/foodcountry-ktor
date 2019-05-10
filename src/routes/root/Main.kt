@@ -7,5 +7,6 @@ import io.ktor.routing.Route
 fun Route.root()  {
     authenticateRoles(*Role.values()) {
         user()
+        ingredient()
     }
 }

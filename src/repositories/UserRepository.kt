@@ -42,7 +42,7 @@ object UserRepository {
         }*/
     }
 
-    suspend fun usersCount(): Int = withContext(Dispatchers.IO) {
+    suspend fun totalUsers(): Int = withContext(Dispatchers.IO) {
         transaction {
             Users.selectAll().count()
         }
@@ -125,7 +125,7 @@ object UserRepository {
             return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
                 .select { Users.id eq UsersRole.userId }
                 .groupBy(Users.id)
-                .limit(limit, offset * limit)
+                .limit(limit, offset)
                 .map {
                     User(
                         id = it[Users.id],

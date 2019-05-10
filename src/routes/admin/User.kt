@@ -2,16 +2,17 @@ package com.taganhorn.routes.admin
 
 import com.taganhorn.repositories.UserRepository
 import io.ktor.application.call
-import io.ktor.response.respond
+import io.ktor.locations.Location
 import io.ktor.routing.Route
-import io.ktor.routing.get
 import io.ktor.routing.route
+import io.ktor.locations.*
+import io.ktor.response.respond
 
 fun Route.user() = route("/user") {
-    get("/list") {
-        call.respond(mapOf(
-            "total" to UserRepository.usersCount(),
-            "list" to UserRepository.getUsers()
-        ))
+    @Location("/list/{page}")
+    class ListLocation(val page: Int)
+    get<ListLocation> {
+        val limit = call.parameters["limit"]?.toInt() ?: 10
+        call.respond(UserRepository.getUsers(it.page*limit, limit))
     }
 }

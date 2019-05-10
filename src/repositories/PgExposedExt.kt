@@ -19,3 +19,15 @@ class PgJsonAgg<T : Comparable<T>, in S : T?>(val expr: Expression<in S>, _colum
     Function<String>(_columnType) {
     override fun toSQL(queryBuilder: QueryBuilder): String = "json_agg(${expr.toSQL(queryBuilder)})"
 }
+
+class Float4ColumnType: ColumnType() {
+    override fun sqlType(): String  = "FLOAT4"
+
+    override fun valueFromDB(value: Any): Any {
+        val valueFromDB = super.valueFromDB(value)
+        return when (valueFromDB) {
+            is Number -> valueFromDB.toFloat()
+            else -> valueFromDB
+        }
+    }
+}

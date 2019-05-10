@@ -21,7 +21,7 @@ fun Route.user() = route("/user") {
             )
         )
     }
-    put("/logout") {
+    get("/logout") {
         UserRepository.deleteTokenUUID(call.principal<AuthPrincipal>()!!.uuid)
         call.respond(HttpStatusCode.OK)
     }
