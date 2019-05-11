@@ -7,13 +7,10 @@ import com.taganhorn.security.AuthPrincipal
 import com.taganhorn.security.Role
 import io.ktor.application.call
 import io.ktor.auth.principal
-import io.ktor.locations.Location
-import io.ktor.locations.get
+import io.ktor.locations.*
 import io.ktor.request.receive
 import io.ktor.response.respond
-import io.ktor.routing.Route
-import io.ktor.routing.post
-import io.ktor.routing.route
+import io.ktor.routing.*
 
 data class AddIngredientRequest(
     @Expose val ingredient: Ingredient
@@ -29,15 +26,18 @@ fun Route.ingredient() = route("/ingredient") {
         if (principal?.roles?.contains(Role.ADMIN) == true || principal?.roles?.contains(Role.SYSTEM) == true) {
             users = call.parameters.get("users")?.split(",")?.map { it.toInt() }
         }
-        call.respond(mapOf(
-            "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users),
-            "total" to IngredientRepository.totalIngredients(userIds = users)
-        ))
+        call.respond(
+            mapOf(
+                "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users),
+                "total" to IngredientRepository.totalIngredients(userIds = users)
+            )
+        )
     }
 
     post("/add") {
         val principal = call.principal<AuthPrincipal>()
         val request = call.receive<AddIngredientRequest>()
+        println(request.ingredient)
         call.respond(
             mapOf(
                 "ingredient" to IngredientRepository.addIngredient(
@@ -47,5 +47,36 @@ fun Route.ingredient() = route("/ingredient") {
                 ).first()
             )
         )
+    }
+
+    @Location("/edit/{id}")
+    class EditLocation(val id: Int)
+    post<EditLocation>{
+        val principal = call.principal<AuthPrincipal>()
+        val request = call.receive<AddIngredientRequest>()
+        call.respond(
+            mapOf(
+                "ingredient" to IngredientRepository.editIngredient(
+                    request.ingredient.copy(
+                    ),
+                    principal!!.userId
+                )
+            )
+        )
+    }
+
+    @Location("/{id}")
+    class RemoveLocation(val id: Int)
+    delete<RemoveLocation> {
+        val principal = call.principal<AuthPrincipal>()
+        val userId = principal!!.userId
+        val roles = principal!!.roles
+        IngredientRepository.deleteIngredient(
+            it.id,
+            if (roles.contains(Role.ADMIN) || roles.contains(Role.SYSTEM)) null else userId
+        )
+        call.respond(mapOf(
+            "status" to "ok"
+        ))
     }
 }

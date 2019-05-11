@@ -33,7 +33,7 @@ object IngredientRepository {
             transaction {
                 return@transaction Ingredients.select {
                     if (userIds.isNullOrEmpty()) OP_TRUE else Ingredients.ownerId.inList(userIds)
-                }.limit(limit, offset).map {
+                }.orderBy(Ingredients.id, SortOrder.DESC).limit(limit, offset).map {
                     Ingredient(
                         id = it[Ingredients.id],
                         name = it[Ingredients.name],
@@ -54,7 +54,7 @@ object IngredientRepository {
                 this[Ingredients.fats] = it.fats
                 this[Ingredients.carbohydrates] = it.carbohydrates
                 this[Ingredients.squirrels] = it.squirrels
-                this[Ingredients.ownerId] = it.ownerId
+                this[Ingredients.ownerId] = it.ownerId!!
                 this[Ingredients.visible] = it.visible.name
             }
         }.map {
@@ -67,6 +67,31 @@ object IngredientRepository {
                 ownerId = it[Ingredients.ownerId],
                 visible = it[Ingredients.visible].let { VisibleType.valueOf(it) }
             )
+        }
+    }
+
+    suspend fun editIngredient(ingredient: Ingredient, userId: Int? = null) = withContext(Dispatchers.IO) {
+        transaction {
+            Ingredients.update({
+                (Ingredients.id eq ingredient.id) and (if (userId == null) OP_TRUE else Ingredients.ownerId eq userId)
+            }) {
+                it[Ingredients.name] = ingredient.name
+                it[Ingredients.fats] = ingredient.fats
+                it[Ingredients.carbohydrates] = ingredient.carbohydrates
+                it[Ingredients.squirrels] = ingredient.squirrels
+                it[Ingredients.ownerId] = ingredient.ownerId!!
+                it[Ingredients.visible] = ingredient.visible.name
+            }
+            return@transaction ingredient
+        }
+    }
+
+    suspend fun deleteIngredient(id: Int, userId: Int? = null) = withContext(Dispatchers.IO) {
+        transaction {
+            Ingredients.deleteWhere {
+                (Ingredients.id eq id) and
+                        (if (userId == null) OP_TRUE else Ingredients.ownerId eq userId)
+            }
         }
     }
 

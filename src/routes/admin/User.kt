@@ -13,6 +13,9 @@ fun Route.user() = route("/user") {
     class ListLocation(val page: Int)
     get<ListLocation> {
         val limit = call.parameters["limit"]?.toInt() ?: 10
-        call.respond(UserRepository.getUsers(it.page*limit, limit))
+        call.respond(mapOf(
+            "total" to UserRepository.totalUsers(),
+            "list" to UserRepository.getUsers(it.page*limit, limit)
+        ))
     }
 }

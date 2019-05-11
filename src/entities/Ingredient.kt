@@ -8,6 +8,6 @@ data class Ingredient(
     @Expose val fats: Float = 0f,
     @Expose val squirrels: Float = 0f,
     @Expose val carbohydrates: Float = 0f,
-    @Expose val ownerId: Int,
+    @Expose val ownerId: Int? = null,
     @Expose val visible: VisibleType = VisibleType.PRIVATE
 )
