@@ -79,7 +79,6 @@ object IngredientRepository {
                 it[Ingredients.fats] = ingredient.fats
                 it[Ingredients.carbohydrates] = ingredient.carbohydrates
                 it[Ingredients.squirrels] = ingredient.squirrels
-                it[Ingredients.ownerId] = ingredient.ownerId!!
                 it[Ingredients.visible] = ingredient.visible.name
             }
             return@transaction ingredient

@@ -5,6 +5,7 @@ import com.taganhorn.entities.Ingredient
 import com.taganhorn.repositories.IngredientRepository
 import com.taganhorn.security.AuthPrincipal
 import com.taganhorn.security.Role
+import com.taganhorn.tools.createMap
 import io.ktor.application.call
 import io.ktor.auth.principal
 import io.ktor.locations.*
@@ -24,11 +25,13 @@ fun Route.ingredient() = route("/ingredient") {
         val principal = call.principal<AuthPrincipal>()
         var users: List<Int>? = listOfNotNull(principal?.userId)
         if (principal?.roles?.contains(Role.ADMIN) == true || principal?.roles?.contains(Role.SYSTEM) == true) {
-            users = call.parameters.get("users")?.split(",")?.map { it.toInt() }
+            users = call.parameters["users"]?.split(",")?.map { it.toInt() }
         }
         call.respond(
             mapOf(
-                "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users),
+                "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users).map {
+                    it.createMap()
+                },
                 "total" to IngredientRepository.totalIngredients(userIds = users)
             )
         )
@@ -44,23 +47,24 @@ fun Route.ingredient() = route("/ingredient") {
                     request.ingredient.copy(
                         ownerId = principal!!.userId
                     )
-                ).first()
+                ).first().createMap()
             )
         )
     }
 
     @Location("/edit/{id}")
     class EditLocation(val id: Int)
-    post<EditLocation>{
+    post<EditLocation> {
         val principal = call.principal<AuthPrincipal>()
         val request = call.receive<AddIngredientRequest>()
         call.respond(
             mapOf(
                 "ingredient" to IngredientRepository.editIngredient(
                     request.ingredient.copy(
+                        id = it.id
                     ),
                     principal!!.userId
-                )
+                ).createMap()
             )
         )
     }
@@ -75,8 +79,10 @@ fun Route.ingredient() = route("/ingredient") {
             it.id,
             if (roles.contains(Role.ADMIN) || roles.contains(Role.SYSTEM)) null else userId
         )
-        call.respond(mapOf(
-            "status" to "ok"
-        ))
+        call.respond(
+            mapOf(
+                "status" to "ok"
+            )
+        )
     }
 }
