@@ -6,7 +6,7 @@ docker run --name foodcountry_db -e POSTGRES_PASSWORD=foodcountry -e POSTGRES_US
 ```
 2. Start server
 ```
-./gradlew runShadow
+./gradlew run
 ```
 3. Check server
 ```
