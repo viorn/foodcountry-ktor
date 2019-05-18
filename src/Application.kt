@@ -2,12 +2,10 @@ package com.taganhorn
 
 import com.taganhorn.repositories.DataBaseProvider
 import com.taganhorn.routes.admin.admin
-import com.taganhorn.routes.root.root
-import com.taganhorn.security.Role
+import com.taganhorn.routes.root.priv
 import com.taganhorn.security.mainApiJwtAuth
 import io.ktor.application.*
 import io.ktor.response.*
-import io.ktor.request.*
 import io.ktor.routing.*
 import io.ktor.http.*
 import io.ktor.locations.*
@@ -26,8 +24,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module(testing: Boolean = false) {
     DataBaseProvider.init()
 
-    install(Locations) {
-    }
+    install(Locations)
 
     install(AutoHeadResponse)
 
@@ -77,8 +74,10 @@ fun Application.module(testing: Boolean = false) {
     install(StatusPages) {
         exception<HttpStatusException> {
             call.respond(
-                status = it.statusCode, message = mapOf<String, Any>(
-                    "message" to (it.message ?: "")
+                status = it.statusCode,
+                message = mapOf<String, Any>(
+                    "message" to (it.message ?: ""),
+                    "stackTrace" to it.stackTrace.map { it.toString() }
                 )
             )
         }
@@ -86,22 +85,10 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
         route("/") {
-            root()
+            priv()
             public()
             admin()
         }
-
-        get<MyLocation> {
-            call.respondText("Location: name=${it.name}, arg1=${it.arg1}, arg2=${it.arg2}")
-        }
-        // Register nested routes
-        get<Type.Edit> {
-            call.respondText("Inside $it")
-        }
-        get<Type.List> {
-            call.respondText("Inside $it")
-        }
-
         webSocket("/myws/echo") {
             send(Frame.Text("Hi from server"))
             while (true) {
@@ -111,22 +98,6 @@ fun Application.module(testing: Boolean = false) {
                 }
             }
         }
-
-        get("/json/gson") {
-            call.respond(mapOf("hello" to "world"))
-        }
     }
-}
-
-@Location("/location/{name}")
-class MyLocation(val name: String, val arg1: Int = 42, val arg2: String = "default")
-
-@Location("/type/{name}")
-data class Type(val name: String) {
-    @Location("/edit")
-    data class Edit(val type: Type)
-
-    @Location("/list/{page}")
-    data class List(val type: Type, val page: Int)
 }
 

@@ -2,23 +2,29 @@ package com.taganhorn.repositories
 
 import com.taganhorn.entities.Ingredient
 import com.taganhorn.entities.VisibleType
-import com.taganhorn.repositories.UserRepository.UsersRole.index
-import com.taganhorn.repositories.UserRepository.UsersRole.references
+import com.taganhorn.kodein
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.kodein.di.generic.instance
+import tables.Ingredients
 
-object IngredientRepository {
-    object Ingredients : Table() {
-        val id = integer("id").primaryKey().autoIncrement()
-        val name = varchar("name", length = 200)
-        val fats = registerColumn<Float>("fats", Float4ColumnType())
-        val squirrels = registerColumn<Float>("squirrels", Float4ColumnType())
-        val carbohydrates = registerColumn<Float>("carbohydrates", Float4ColumnType())
-        val ownerId = (integer("ownerId") references UserRepository.Users.id).index()
-        val visible = varchar("visible", length = 100).default(VisibleType.PRIVATE.name).index()
-    }
+val IngredientRepository by kodein.instance<IIngredientRepository>()
+
+interface IIngredientRepository {
+    suspend fun getIngredients(offset: Int = 0, limit: Int = 10, userIds: List<Int>? = null): List<Ingredient>
+
+    suspend fun addIngredient(vararg ingredients: Ingredient): List<Ingredient>
+
+    suspend fun editIngredient(ingredient: Ingredient, userId: Int? = null): Ingredient
+
+    suspend fun deleteIngredient(id: Int, userId: Int? = null): Int
+
+    suspend fun totalIngredients(userIds: List<Int>? = null): Int
+}
+
+class IngredientRepositoryImpl : IIngredientRepository {
 
     init {
         transaction {
@@ -28,7 +34,7 @@ object IngredientRepository {
         }
     }
 
-    suspend fun getIngredients(offset: Int = 0, limit: Int = 10, userIds: List<Int>? = null): List<Ingredient> =
+    override suspend fun getIngredients(offset: Int, limit: Int, userIds: List<Int>?): List<Ingredient> =
         withContext(Dispatchers.IO) {
             transaction {
                 return@transaction Ingredients.select {
@@ -47,7 +53,7 @@ object IngredientRepository {
             }
         }
 
-    suspend fun addIngredient(vararg ingredients: Ingredient) = withContext(Dispatchers.IO) {
+    override suspend fun addIngredient(vararg ingredients: Ingredient) = withContext(Dispatchers.IO) {
         transaction {
             Ingredients.batchInsert(ingredients.asIterable()) {
                 this[Ingredients.name] = it.name
@@ -70,7 +76,7 @@ object IngredientRepository {
         }
     }
 
-    suspend fun editIngredient(ingredient: Ingredient, userId: Int? = null) = withContext(Dispatchers.IO) {
+    override suspend fun editIngredient(ingredient: Ingredient, userId: Int?) = withContext(Dispatchers.IO) {
         transaction {
             Ingredients.update({
                 (Ingredients.id eq ingredient.id) and (if (userId == null) OP_TRUE else Ingredients.ownerId eq userId)
@@ -85,7 +91,7 @@ object IngredientRepository {
         }
     }
 
-    suspend fun deleteIngredient(id: Int, userId: Int? = null) = withContext(Dispatchers.IO) {
+    override suspend fun deleteIngredient(id: Int, userId: Int?) = withContext(Dispatchers.IO) {
         transaction {
             Ingredients.deleteWhere {
                 (Ingredients.id eq id) and
@@ -94,7 +100,7 @@ object IngredientRepository {
         }
     }
 
-    suspend fun totalIngredients(userIds: List<Int>? = null): Int = withContext(Dispatchers.IO) {
+    override suspend fun totalIngredients(userIds: List<Int>?): Int = withContext(Dispatchers.IO) {
         transaction {
             Ingredients.select {
                 if (userIds.isNullOrEmpty()) OP_TRUE else Ingredients.ownerId.inList(userIds)

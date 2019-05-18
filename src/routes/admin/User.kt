@@ -1,5 +1,6 @@
 package com.taganhorn.routes.admin
 
+import com.taganhorn.UserNotFoundException
 import com.taganhorn.repositories.UserRepository
 import io.ktor.application.call
 import io.ktor.locations.Location
@@ -18,4 +19,14 @@ fun Route.user() = route("/user") {
             "list" to UserRepository.getUsers(it.page*limit, limit)
         ))
     }
+
+    @Location("/lock/{id}")
+    class LockUserLocation(val id: Int)
+    put<LockUserLocation> {
+        val id = it.id
+        call.respond(mapOf(
+            "user" to (UserRepository.lockUser(id) ?: throw UserNotFoundException())
+        ))
+    }
 }
+

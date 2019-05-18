@@ -3,21 +3,32 @@ package com.taganhorn.repositories
 import com.taganhorn.entities.Ingredient
 import com.taganhorn.entities.User
 import com.taganhorn.entities.VisibleType
+import com.taganhorn.kodein
 import com.taganhorn.security.Role
 import com.taganhorn.tools.sha1
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
+import org.kodein.di.generic.instance
 
-object DataBaseProvider {
-    var database: Database? = null
-    fun init() = runBlocking {
+val DataBaseProvider by kodein.instance<IDataBaseProvider>()
+
+interface IDataBaseProvider {
+    fun init()
+    val database: Database?
+}
+
+class DataBaseProviderImpl : IDataBaseProvider {
+    override var database: Database? = null
+        private set
+
+    override fun init() = runBlocking {
         database = Database.connect(
             url = "jdbc:postgresql://db/foodcountry",
             driver = "org.postgresql.Driver",
             user = "foodcountry",
             password = "foodcountry"
         )
-        var systemUser: User = UserRepository.findUserByName("SYSTEM") ?: run{
+        var systemUser: User = UserRepository.findUserByName("SYSTEM") ?: run {
             UserRepository.addUser(
                 User(
                     name = "SYSTEM",
@@ -46,7 +57,7 @@ object DataBaseProvider {
                 }
             }
         }
-        if (IngredientRepository.totalIngredients()==0) {
+        if (IngredientRepository.totalIngredients() == 0) {
             IngredientRepository.addIngredient(
                 Ingredient(
                     name = "Вода",

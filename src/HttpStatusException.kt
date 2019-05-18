@@ -7,6 +7,7 @@ open class HttpStatusException(
     message: String
 ): Exception(message)
 
+class UserNotFoundException: HttpStatusException(HttpStatusCode.NotFound, "USER_NOT_FOUND")
 class TokenIsEmptyException: HttpStatusException(HttpStatusCode.Unauthorized, "TOKEN_IS_EMPTY")
 class TokenIsExpiresException: HttpStatusException(HttpStatusCode.Unauthorized, "TOKEN_IS_EXPIRES")
 class TokenIsLockException: HttpStatusException(HttpStatusCode.Unauthorized, "TOKEN_IS_LOCK")

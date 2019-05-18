@@ -7,5 +7,6 @@ data class User(
     @Expose val id: Int = -1,
     @Expose val name: String,
     val password: String,
-    @Expose val roles: List<Role>
+    @Expose val roles: List<Role>,
+    @Expose val locked: Boolean = false
 )
