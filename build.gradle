@@ -19,7 +19,7 @@ apply plugin: 'application'
 
 group 'foodcountry'
 version '0.0.1'
-mainClassName = "io.ktor.server.netty.EngineMain"
+mainClassName = "com.taganhorn.ApplicationKt"
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
@@ -49,6 +49,6 @@ dependencies {
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
 }
 
-shadowJar {
-    minimize()
-}
+//shadowJar {
+    //minimize()
+//}
