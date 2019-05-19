@@ -29,9 +29,7 @@ fun Route.ingredient() = route("/ingredient") {
         }
         call.respond(
             mapOf(
-                "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users).map {
-                    it.createMap()
-                },
+                "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users),
                 "total" to IngredientRepository.totalIngredients(userIds = users)
             )
         )
@@ -47,7 +45,7 @@ fun Route.ingredient() = route("/ingredient") {
                     request.ingredient.copy(
                         ownerId = principal!!.userId
                     )
-                ).first().createMap()
+                ).first()
             )
         )
     }
@@ -64,7 +62,7 @@ fun Route.ingredient() = route("/ingredient") {
                         id = it.id
                     ),
                     principal!!.userId
-                ).createMap()
+                )
             )
         )
     }
