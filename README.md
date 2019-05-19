@@ -46,5 +46,4 @@ or
 
 
 ---------
-Database diagram
-![alt text](http://url/to/img.png)
+![Database diagram](database.png)
