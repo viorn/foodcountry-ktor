@@ -8,6 +8,7 @@ import io.ktor.routing.Route
 import io.ktor.routing.route
 import io.ktor.locations.*
 import io.ktor.response.respond
+import io.ktor.routing.get
 
 fun Route.user() = route("/user") {
     @Location("/list/{page}")
@@ -26,6 +27,15 @@ fun Route.user() = route("/user") {
         val id = it.id
         call.respond(mapOf(
             "user" to (UserRepository.lockUser(id) ?: throw UserNotFoundException())
+        ))
+    }
+
+    @Location("/unlock/{id}")
+    class UnLockUserLocation(val id: Int)
+    put<UnLockUserLocation> {
+        val id = it.id
+        call.respond(mapOf(
+            "user" to (UserRepository.unlockUser(id) ?: throw UserNotFoundException())
         ))
     }
 }

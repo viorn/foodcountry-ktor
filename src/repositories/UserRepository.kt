@@ -33,6 +33,8 @@ interface IUserRepository {
 
     suspend fun lockUser(userId: Int): User?
 
+    suspend fun unlockUser(userId: Int): User?
+
     suspend fun getUsers(offset: Int = 0, limit: Int = 10): List<User>
 }
 
@@ -129,6 +131,23 @@ class UserRepositoryImpl : IUserRepository {
     override suspend fun lockUser(userId: Int): User? = withContext(Dispatchers.IO) {
         transaction {
             Users.update(where = { Users.id eq userId }) { it[locked] = true }
+            val roles = UsersRole.role.pg_array_agg().alias("roles")
+            return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
+                .select { (Users.id eq UsersRole.userId) and (Users.id eq userId) }.groupBy(
+                    Users.id).first().let {
+                    User(
+                        id = it[Users.id],
+                        name = it[Users.name],
+                        password = it[Users.password],
+                        roles = (it[roles].array as Array<String>).map { Role.valueOf(it) }
+                    )
+                }
+        }
+    }
+
+    override suspend fun unlockUser(userId: Int): User? = withContext(Dispatchers.IO) {
+        transaction {
+            Users.update(where = { Users.id eq userId }) { it[locked] = false }
             val roles = UsersRole.role.pg_array_agg().alias("roles")
             return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
                 .select { (Users.id eq UsersRole.userId) and (Users.id eq userId) }.groupBy(
