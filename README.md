@@ -46,4 +46,5 @@ or
 
 
 ---------
+Database diagram
 ![Database diagram](database.png)
