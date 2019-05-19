@@ -2,7 +2,8 @@
 
 1. Start database
 ```
-docker run --name foodcountry_db -e POSTGRES_PASSWORD=foodcountry -e POSTGRES_USER=foodcountry -e POSTGRES_DB=foodcountry --rm -p 5432:5432 postgres
+docker volume create pgsql_foodcountry_data || echo "$(tput setaf 1)creating db volume end with error$(tput setaf 0)"
+docker run -m 512m --name foodcountry_db -e POSTGRES_PASSWORD=foodcountry -e POSTGRES_USER=foodcountry -e POSTGRES_DB=foodcountry -v pgsql_foodcountry_data:/var/lib/postgresql/data --restart unless-stopped -p 5432:5432/tcp -d postgres:11.3-alpine || echo "$(tput setaf 1)creating db container end with error$(tput setaf 0)"
 ```
 2. Start server
 ```
