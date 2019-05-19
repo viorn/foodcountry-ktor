@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.kodein.di.generic.instance
-import tables.IngredientsTable
+import database.tables.IngredientsTable
 
 val IngredientRepository by kodein.instance<IIngredientRepository>()
 

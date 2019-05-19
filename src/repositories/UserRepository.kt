@@ -10,9 +10,9 @@ import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.kodein.di.generic.instance
-import tables.TokenUUIDTable
-import tables.UsersTable
-import tables.UsersRoleTable
+import database.tables.TokenUUIDTable
+import database.tables.UsersTable
+import database.tables.UsersRoleTable
 
 val UserRepository by kodein.instance<IUserRepository>()
 

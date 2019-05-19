@@ -1,4 +1,4 @@
-package tables
+package database.tables
 
 import com.taganhorn.entities.VisibleType
 import com.taganhorn.repositories.Float4ColumnType

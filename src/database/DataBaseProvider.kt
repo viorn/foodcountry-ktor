@@ -13,10 +13,10 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.kodein.di.generic.instance
-import tables.IngredientsTable
-import tables.TokenUUIDTable
-import tables.UsersTable
-import tables.UsersRoleTable
+import database.tables.IngredientsTable
+import database.tables.TokenUUIDTable
+import database.tables.UsersTable
+import database.tables.UsersRoleTable
 
 val DataBaseProvider by kodein.instance<IDataBaseProvider>()
 
