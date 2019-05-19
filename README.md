@@ -37,7 +37,7 @@ response 200-OK:
 You can use the scripts for run the project
 
 ```
-./start.sh
+./start.sh <full path to jar file>
 ```
 or
 ```
