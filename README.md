@@ -30,3 +30,15 @@ response 200-OK:
 	}
 }
 ```
+
+---------
+
+You can use the scripts for run the project
+
+```
+./start.sh
+```
+or
+```
+./restart.sh
+```
