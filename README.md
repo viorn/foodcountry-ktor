@@ -32,6 +32,7 @@ response 200-OK:
 ```
 
 ---------
+--OR--
 
 You can use the scripts for run the project
 
