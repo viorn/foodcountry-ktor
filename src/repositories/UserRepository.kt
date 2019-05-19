@@ -10,9 +10,9 @@ import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import org.kodein.di.generic.instance
-import tables.TokenUUID
-import tables.Users
-import tables.UsersRole
+import tables.TokenUUIDTable
+import tables.UsersTable
+import tables.UsersRoleTable
 
 val UserRepository by kodein.instance<IUserRepository>()
 
@@ -39,53 +39,43 @@ interface IUserRepository {
 }
 
 class UserRepositoryImpl : IUserRepository {
-    init {
-        transaction {
-            SchemaUtils.apply {
-                create(Users)
-                create(UsersRole)
-                create(TokenUUID)
-            }
-        }
-    }
-
     override suspend fun totalUsers(): Int = withContext(Dispatchers.IO) {
         transaction {
-            Users.selectAll().count()
+            UsersTable.selectAll().count()
         }
     }
 
     override suspend fun checkTokenUUID(uuid: String): Boolean = withContext(Dispatchers.IO) {
         transaction {
-            TokenUUID.select { TokenUUID.uuid eq uuid }.count() != 0
+            TokenUUIDTable.select { TokenUUIDTable.uuid eq uuid }.count() != 0
         }
     }
 
     override suspend fun addTokenUUID(userId: Int, uuid: String, userAgent: String?) = withContext(Dispatchers.IO) {
         transaction {
-            TokenUUID.insert {
-                it[TokenUUID.userId] = userId
-                it[TokenUUID.uuid] = uuid
-                it[TokenUUID.date] = DateTime.now()
-                it[TokenUUID.userAgent] = userAgent
+            TokenUUIDTable.insert {
+                it[TokenUUIDTable.userId] = userId
+                it[TokenUUIDTable.uuid] = uuid
+                it[TokenUUIDTable.date] = DateTime.now()
+                it[TokenUUIDTable.userAgent] = userAgent
             }
         }
     }
 
     override suspend fun deleteTokenUUID(uuid: String) = withContext(Dispatchers.IO) {
         transaction {
-            TokenUUID.deleteWhere { TokenUUID.uuid eq uuid }
+            TokenUUIDTable.deleteWhere { TokenUUIDTable.uuid eq uuid }
         }
     }
 
     override suspend fun addUser(user: User) = withContext(Dispatchers.IO) {
         transaction {
-            val userId = Users.insert {
+            val userId = UsersTable.insert {
                 it[name] = user.name
                 it[password] = user.password
-            }[Users.id]
+            }[UsersTable.id]
             user.roles.forEach { role ->
-                UsersRole.insert table@{
+                UsersRoleTable.insert table@{
                     it[this@table.userId] = userId
                     it[this@table.role] = role.name
                 }
@@ -97,14 +87,14 @@ class UserRepositoryImpl : IUserRepository {
     override suspend fun findUserByName(name: String): User? = withContext(Dispatchers.IO) {
         transaction {
             runCatching {
-                val roles = UsersRole.role.pg_array_agg().alias("roles")
-                return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
-                    .select { (Users.id eq UsersRole.userId) and (Users.name eq name) }.groupBy(
-                        Users.id).first().let {
+                val roles = UsersRoleTable.role.pg_array_agg().alias("roles")
+                return@transaction (UsersTable leftJoin UsersRoleTable).slice(UsersTable.id, UsersTable.name, UsersTable.password, roles)
+                    .select { (UsersTable.id eq UsersRoleTable.userId) and (UsersTable.name eq name) }.groupBy(
+                        UsersTable.id).first().let {
                         User(
-                            id = it[Users.id],
-                            name = it[Users.name],
-                            password = it[Users.password],
+                            id = it[UsersTable.id],
+                            name = it[UsersTable.name],
+                            password = it[UsersTable.password],
                             roles = (it[roles].array as Array<String>).map { Role.valueOf(it) }
                         )
                     }
@@ -114,14 +104,14 @@ class UserRepositoryImpl : IUserRepository {
 
     override suspend fun getUser(userId: Int): User? = withContext(Dispatchers.IO) {
         transaction {
-            val roles = UsersRole.role.pg_array_agg().alias("roles")
-            return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
-                .select { (Users.id eq UsersRole.userId) and (Users.id eq userId) }.groupBy(
-                    Users.id).first().let {
+            val roles = UsersRoleTable.role.pg_array_agg().alias("roles")
+            return@transaction (UsersTable leftJoin UsersRoleTable).slice(UsersTable.id, UsersTable.name, UsersTable.password, roles)
+                .select { (UsersTable.id eq UsersRoleTable.userId) and (UsersTable.id eq userId) }.groupBy(
+                    UsersTable.id).first().let {
                     User(
-                        id = it[Users.id],
-                        name = it[Users.name],
-                        password = it[Users.password],
+                        id = it[UsersTable.id],
+                        name = it[UsersTable.name],
+                        password = it[UsersTable.password],
                         roles = (it[roles].array as Array<String>).map { Role.valueOf(it) }
                     )
                 }
@@ -130,15 +120,15 @@ class UserRepositoryImpl : IUserRepository {
 
     override suspend fun lockUser(userId: Int): User? = withContext(Dispatchers.IO) {
         transaction {
-            Users.update(where = { Users.id eq userId }) { it[locked] = true }
-            val roles = UsersRole.role.pg_array_agg().alias("roles")
-            return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
-                .select { (Users.id eq UsersRole.userId) and (Users.id eq userId) }.groupBy(
-                    Users.id).first().let {
+            UsersTable.update(where = { UsersTable.id eq userId }) { it[locked] = true }
+            val roles = UsersRoleTable.role.pg_array_agg().alias("roles")
+            return@transaction (UsersTable leftJoin UsersRoleTable).slice(UsersTable.id, UsersTable.name, UsersTable.password, roles)
+                .select { (UsersTable.id eq UsersRoleTable.userId) and (UsersTable.id eq userId) }.groupBy(
+                    UsersTable.id).first().let {
                     User(
-                        id = it[Users.id],
-                        name = it[Users.name],
-                        password = it[Users.password],
+                        id = it[UsersTable.id],
+                        name = it[UsersTable.name],
+                        password = it[UsersTable.password],
                         roles = (it[roles].array as Array<String>).map { Role.valueOf(it) }
                     )
                 }
@@ -147,15 +137,15 @@ class UserRepositoryImpl : IUserRepository {
 
     override suspend fun unlockUser(userId: Int): User? = withContext(Dispatchers.IO) {
         transaction {
-            Users.update(where = { Users.id eq userId }) { it[locked] = false }
-            val roles = UsersRole.role.pg_array_agg().alias("roles")
-            return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
-                .select { (Users.id eq UsersRole.userId) and (Users.id eq userId) }.groupBy(
-                    Users.id).first().let {
+            UsersTable.update(where = { UsersTable.id eq userId }) { it[locked] = false }
+            val roles = UsersRoleTable.role.pg_array_agg().alias("roles")
+            return@transaction (UsersTable leftJoin UsersRoleTable).slice(UsersTable.id, UsersTable.name, UsersTable.password, roles)
+                .select { (UsersTable.id eq UsersRoleTable.userId) and (UsersTable.id eq userId) }.groupBy(
+                    UsersTable.id).first().let {
                     User(
-                        id = it[Users.id],
-                        name = it[Users.name],
-                        password = it[Users.password],
+                        id = it[UsersTable.id],
+                        name = it[UsersTable.name],
+                        password = it[UsersTable.password],
                         roles = (it[roles].array as Array<String>).map { Role.valueOf(it) }
                     )
                 }
@@ -164,16 +154,16 @@ class UserRepositoryImpl : IUserRepository {
 
     override suspend fun getUsers(offset: Int, limit: Int): List<User> = withContext(Dispatchers.IO) {
         transaction {
-            val roles = UsersRole.role.pg_array_agg().alias("roles")
-            return@transaction (Users leftJoin UsersRole).slice(Users.id, Users.name, Users.password, roles)
-                .select { Users.id eq UsersRole.userId }
-                .groupBy(Users.id)
+            val roles = UsersRoleTable.role.pg_array_agg().alias("roles")
+            return@transaction (UsersTable leftJoin UsersRoleTable).slice(UsersTable.id, UsersTable.name, UsersTable.password, roles)
+                .select { UsersTable.id eq UsersRoleTable.userId }
+                .groupBy(UsersTable.id)
                 .limit(limit, offset)
                 .map {
                     User(
-                        id = it[Users.id],
-                        name = it[Users.name],
-                        password = it[Users.password],
+                        id = it[UsersTable.id],
+                        name = it[UsersTable.name],
+                        password = it[UsersTable.password],
                         roles = (it[roles].array as Array<String>).map { Role.valueOf(it) }
                     )
                 }

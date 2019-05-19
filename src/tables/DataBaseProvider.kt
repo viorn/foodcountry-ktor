@@ -5,10 +5,18 @@ import com.taganhorn.entities.User
 import com.taganhorn.entities.VisibleType
 import com.taganhorn.kodein
 import com.taganhorn.security.Role
+import com.taganhorn.tables.DishesTable
+import com.taganhorn.tables.DishesIngredientTable
 import com.taganhorn.tools.sha1
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.kodein.di.generic.instance
+import tables.IngredientsTable
+import tables.TokenUUIDTable
+import tables.UsersTable
+import tables.UsersRoleTable
 
 val DataBaseProvider by kodein.instance<IDataBaseProvider>()
 
@@ -28,6 +36,16 @@ class DataBaseProviderImpl : IDataBaseProvider {
             user = "foodcountry",
             password = "foodcountry"
         )
+        transaction {
+            SchemaUtils.apply {
+                create(UsersTable)
+                create(UsersRoleTable)
+                create(TokenUUIDTable)
+                create(IngredientsTable)
+                create(DishesTable)
+                create(DishesIngredientTable)
+            }
+        }
         var systemUser: User = UserRepository.findUserByName("SYSTEM") ?: run {
             UserRepository.addUser(
                 User(
