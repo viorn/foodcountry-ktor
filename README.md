@@ -43,3 +43,8 @@ or
 ```
 ./restart.sh
 ```
+
+
+---------
+Database diagram
+![Database diagram](database.png)
