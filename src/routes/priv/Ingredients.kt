@@ -29,7 +29,7 @@ fun Route.ingredient() = route("/ingredient") {
         }
         call.respond(
             mapOf(
-                "list" to IngredientRepository.getIngredients(offset = limit * it.page, userIds = users),
+                "list" to IngredientRepository.getIngredients(offset = limit * it.page, limit = limit, userIds = users),
                 "total" to IngredientRepository.totalIngredients(userIds = users)
             )
         )

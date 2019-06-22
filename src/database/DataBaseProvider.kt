@@ -1,8 +1,6 @@
 package com.taganhorn.repositories
 
-import com.taganhorn.entities.Ingredient
-import com.taganhorn.entities.User
-import com.taganhorn.entities.VisibleType
+import com.taganhorn.entities.*
 import com.taganhorn.kodein
 import com.taganhorn.security.Role
 import com.taganhorn.tables.DishesTable
@@ -76,7 +74,7 @@ class DataBaseProviderImpl : IDataBaseProvider {
             }
         }
         if (IngredientRepository.totalIngredients() == 0) {
-            IngredientRepository.addIngredient(
+            val ingredientMap = IngredientRepository.addIngredient(
                 Ingredient(
                     name = "Вода",
                     ownerId = systemUser.id,
@@ -98,7 +96,18 @@ class DataBaseProviderImpl : IDataBaseProvider {
                     carbohydrates = 49f,
                     visible = VisibleType.PUBLIC
                 )
-            )
+            ).map { it.name to it }.toMap()
+            if (DishRepository.getDishesCount() == 0) {
+                DishRepository.addDishes(Dish(
+                    name = "Хлеб с яйцом",
+                    ownerId = systemUser.id,
+                    visible = VisibleType.PUBLIC,
+                    ingredients = mapOf(
+                        ingredientMap["Яйца куринные"]?.id!! to 200,
+                        ingredientMap["Хлеб"]?.id!! to 200
+                    )
+                ))
+            }
         }
     }
 }

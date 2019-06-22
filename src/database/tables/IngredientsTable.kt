@@ -4,7 +4,7 @@ import com.taganhorn.entities.VisibleType
 import com.taganhorn.repositories.Float4ColumnType
 import org.jetbrains.exposed.sql.Table
 
-object IngredientsTable : Table("ingredients") {
+object IngredientsTable : Table("ingredient") {
     val id = integer("id").primaryKey().autoIncrement()
     val name = varchar("name", length = 200)
     val fats = registerColumn<Float>("fats", Float4ColumnType())

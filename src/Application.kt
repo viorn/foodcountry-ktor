@@ -15,12 +15,16 @@ import io.ktor.http.cio.websocket.*
 import java.time.*
 import io.ktor.auth.*
 import io.ktor.gson.*
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import routes.public.public
 
-fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+fun main(args: Array<String>) {
+    embeddedServer(Netty, 8080) {
+        module()
+    }.start(true)
+}
 
-@Suppress("unused") // Referenced in application.conf
-@kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
     DataBaseProvider.init()
 

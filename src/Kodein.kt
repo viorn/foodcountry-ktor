@@ -11,6 +11,7 @@ val kodein = Kodein {
     bind<IDataBaseProvider>() with singleton { DataBaseProviderImpl() }
     bind<IUserRepository>() with singleton { UserRepositoryImpl() }
     bind<IIngredientRepository>() with singleton { IngredientRepositoryImpl() }
+    bind<IDishRepository>() with singleton { DishRepositoryImpl() }
 
     bind<ICaloriesInteractor>() with singleton { CaloriesInteractorImpl() }
 }

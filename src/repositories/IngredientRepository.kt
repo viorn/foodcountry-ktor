@@ -1,8 +1,10 @@
 package com.taganhorn.repositories
 
+import com.taganhorn.entities.DishesIngredient
 import com.taganhorn.entities.Ingredient
 import com.taganhorn.entities.VisibleType
 import com.taganhorn.kodein
+import com.taganhorn.tables.DishesIngredientTable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.*
@@ -15,6 +17,8 @@ val IngredientRepository by kodein.instance<IIngredientRepository>()
 interface IIngredientRepository {
     suspend fun getIngredients(offset: Int = 0, limit: Int = 10, userIds: List<Int>? = null): List<Ingredient>
 
+    suspend fun getIngredientsByDish(dishId: Int): List<DishesIngredient>
+
     suspend fun addIngredient(vararg ingredients: Ingredient): List<Ingredient>
 
     suspend fun editIngredient(ingredient: Ingredient, userId: Int? = null): Ingredient
@@ -25,6 +29,38 @@ interface IIngredientRepository {
 }
 
 class IngredientRepositoryImpl : IIngredientRepository {
+    override suspend fun getIngredientsByDish(dishId: Int): List<DishesIngredient> = withContext(Dispatchers.IO) {
+        transaction {
+            val tmpData = DishesIngredientTable.select {
+                DishesIngredientTable.dishId eq dishId
+            }.map {
+                it[DishesIngredientTable.ingredientId] to it[DishesIngredientTable.weight]
+            }
+            val ingredients = HashMap<Int, Ingredient>()
+            IngredientsTable.select {
+                IngredientsTable.id.inList(tmpData.map { it.first })
+            }.forEach {
+                ingredients[it[IngredientsTable.id]] = Ingredient(
+                    id = it[IngredientsTable.id],
+                    name = it[IngredientsTable.name],
+                    fats = it[IngredientsTable.fats],
+                    squirrels = it[IngredientsTable.squirrels],
+                    carbohydrates = it[IngredientsTable.carbohydrates],
+                    ownerId = it[IngredientsTable.ownerId],
+                    visible = VisibleType.valueOf(it[IngredientsTable.visible])
+                )
+            }
+            return@transaction tmpData.map {
+                DishesIngredient(
+                    ingredientId = it.first,
+                    weight = it.second
+                ).apply {
+                    this.ingredient = ingredients[it.first]!!
+                }
+            }
+        }
+    }
+
     override suspend fun getIngredients(offset: Int, limit: Int, userIds: List<Int>?): List<Ingredient> =
         withContext(Dispatchers.IO) {
             transaction {
